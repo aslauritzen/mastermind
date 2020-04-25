@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mastermind Game</title>
+    <link rel="stylesheet" href="css/mastermind.css">
+</head>
+<body>
+    <h3 id="secret_code_wrapper_text">
+    </h3>
+    <div id="secret_code_wrapper">
+    </div>
+    <div id="game_settings">
+        <label for="num_pegs">
+            How many pegs do you want to play with?
+        </label>
+        <select id="num_pegs">
+            <option value="4">4 Pegs</option>
+            <option value="5">5 Pegs</option>
+            <option value="6">6 Pegs</option>
+        </select>
+        <label for="num_rounds">
+            How many rounds do you want to play?
+        </label>
+        <select id="num_rounds">
+            <option value="10">10 Rounds</option>
+            <option value="13">12 Rounds</option>
+            <option value="15">15 Rounds</option>
+        </select>
+        <div class="start_buttons">
+            <button class="mastermind_button" onclick="startGame(0);">Start Player Game</button>
+            <button class="mastermind_button" onclick="startGame(1);">Start Computer Game</button>
+            <button class="mastermind_button" onclick="loadSampleGame();" >Load Saved Game</button>
+        </div>
+    </div>
+    <div id="centered_content" class="hide">
+        <div id="end_game" class="hide">
+        </div>
+        <table id="mastermind_sidebar">
+            <tr><td><div class="peg white">1</div></td></tr>
+            <tr><td><div class="peg red">2</div></td></tr>
+            <tr><td><div class="peg green">3</div></td></tr>
+            <tr><td><div class="peg blue">4</div></td></tr>
+            <tr><td><div class="peg yellow">5</div></td></tr>
+            <tr><td><div class="peg purple">6</div></td></tr>
+            <tr><td><div class="peg orange">7</div></td></tr>
+        </table>
+        <table id="mastermind"></table>
+        <div id="guess_wrapper">
+            <button id="restart_button" class="submit_restart mastermind_button response_button" onclick="restartGame();">Restart</button>
+            <button id="guess_button" class="hide submit_restart mastermind_button response_button" onclick="makeGuess();">Make Guess</button>
+            <button id="response_button" class="hide submit_restart mastermind_button response_button" onclick="submitResponse();">Submit Response</button>
+        </div>
+        <div class="game_title">
+            Mastermind
+        </div>
+    </div>
+</body>
+<script src="js/mastermind.js"></script>
+<script>
+    let mastermind;
+
+    function mastermindBoardInitialization(mode, sample=false) {
+        generateBoard(mode, mastermind.getRoundTotal(), mastermind.getCodeLength(), sample);
+        let current_row;
+        if (mode === 0){
+            current_row = document.getElementById(sample ? 'game_row_' + (sample.current_round + 1).toString(): 'game_row_1');
+        }
+        else {
+            if (!sample) {
+                current_row = document.getElementById('secret_code_row');
+            }
+        }
+        let pegs = current_row ? current_row.getElementsByClassName('peg'): [];
+
+        for (let i = 0; i < pegs.length; i++) {
+            pegs[i].onclick = function(el) {
+                hideColorMenus();
+                el.currentTarget.childNodes[1].classList.add("show");
+                el.currentTarget.classList.remove('error');
+            };
+            pegs[i].classList.add('current_row_peg');
+        }
+
+        document.getElementById('centered_content').classList.remove('hide');
+        let board_width = document.getElementById("mastermind").offsetWidth;
+        let center_offset = (board_width / 2) + 69;
+        document.getElementById('centered_content').style.marginLeft = 'calc(50% - ' + center_offset.toString() + 'px)';
+        document.getElementById('guess_wrapper').style.width = (board_width).toString() + 'px';
+        document.getElementById('guess_wrapper').style.paddingLeft = '75px';
+    }
+
+    function generateBoard(mode, rows, cols, sample=false) {
+        let computer_score = mastermind.computer_score;
+        let player_score = mastermind.player_score;
+        let guesses;
+        let guess_colors = {
+            1: ' white',
+            2: ' red',
+            3: ' green',
+            4: ' blue',
+            5: ' yellow',
+            6: ' purple',
+            7: ' orange'
+        };
+
+        let responses;
+        let response_colors = {
+            1: 'white',
+            2: 'red'
+        };
+        if (sample) {
+            guesses = sample.guesses;
+            responses = sample.responses;
+            computer_score = sample.computer_score;
+            player_score = sample.player_score
+        }
+        let board = document.getElementById('mastermind');
+        let board_string = '';
+        let even_or_odd = 0;
+        for (let i = parseInt(rows); i > 0; i--) {
+            even_or_odd = i % 2;
+            board_string +=
+                '    <tr class="game_row" id="game_row_' + i.toString() + '">' +
+                '        <td class="score_cell">' +
+                '            <table>';
+            for (let j = 3; j > 0; j--) {
+                let row = (i * 3) - 3 + j;
+                board_string +=
+                    '                <tr>' +
+                    '                    <td class="inner_cell" id="inner_cell_1_' + row.toString() + '">' +
+                    (row <= computer_score ?'<div class="small_peg blue"></div>': '') +
+                    '                    </td>' +
+                    '                    <td class="inner_cell" id="inner_cell_2_' + row.toString() + '">' +
+                    (row <= player_score ?'  <div class="small_peg green"></div>': '') +
+                    '</td>' +
+                    '                </tr>';
+            }
+            board_string +=
+                '            </table>' +
+                '        </td>' +
+                '        <td class="half_circle_left"></td>' +
+                '        <td class="code_section">' +
+                '            <table>' +
+                '                <tr class="code_row">';
+            for (let k = 1; k <= cols; k++) {
+                board_string +=
+                    '                <td class="outer_cell">' +
+                    '                    <div class="peg_holder">' +
+                    '                        <div class="peg' + (sample && guesses.length > i - 1 ? guess_colors[guesses[i - 1][k - 1]]: '') + '" id="peg_' + k + '">' +
+                    (mode === 0 ?
+                    '                           <div class="color_menu">' +
+                    '                               <div class="sub_color_menu">' +
+                    '                                   <option class="menu_peg white" value="1"></option>' +
+                    '                                   <option class="menu_peg red" value="2"></option>' +
+                    '                                   <option class="menu_peg green" value="3"></option>' +
+                    '                                   <option class="menu_peg blue" value="4"></option>' +
+                    '                                   <option class="menu_peg yellow" value="5"></option>' +
+                    '                                   <option class="menu_peg purple" value="6"></option>' +
+                    '                                   <option class="menu_peg orange" value="7"></option>' +
+                    '                               </div>' +
+                    '                           </div>'+
+                    '                           <input hidden class="peg_value" value="0"/>':
+                    '') +
+                    '                        </div>' +
+                    '                    </div>' +
+                    '                </td>'
+            }
+            board_string +=
+                '                    <td class="response_cell outer_cell">' +
+                '                        <table>';
+
+            let cell_no = 1;
+            for (let l = 0; l < 2; l++) {
+                board_string += '            <tr>';
+                for (let m = 0; m < Math.ceil(cols / 2); m++) {
+                    if (cell_no <= cols) {
+                        board_string +=
+                            '<td class="inner_cell" id="inner_cell_' + cell_no + '">' +
+                                (mode === 1 ?
+                                    (sample && responses.length > i - 1 ?
+                                        (responses[i - 1].length > cell_no - 1 ?
+                                            '<div class="small_peg ' + response_colors[responses[i - 1][cell_no - 1]] + '">': '<div class="small_peg">'): '<div class="small_peg">') +
+                                            '   <div class="color_menu">' +
+                                            '       <div class="sub_color_menu">' +
+                                            '           <option class="menu_peg white bottom_margin" value="1">&nbsp;</option>' +
+                                            '           <option class="menu_peg red bottom_margin" value="2">&nbsp;</option>' +
+                                            '           <option class="menu_peg remove bottom_margin" value="0">&#xd7;</option>' +
+                                            '       </div>' +
+                                            '   </div>'+
+                                            '   <input hidden class="peg_value" value="0"/>' +
+                                            '</div>':
+                                (sample && responses.length > i - 1 ?
+                                    (responses[i - 1].length > cell_no - 1 ?
+                                        '<div class="small_peg ' + response_colors[responses[i - 1][cell_no - 1]] + '"></div>': ''): '')) +
+                            '</td>';
+                        cell_no++;
+                    }
+                }
+                board_string += '            </tr>';
+            }
+            board_string +=
+                '                        </table>' +
+                '                    </td>' +
+                '                </tr>' +
+                '            </table>' +
+                '        </td>' +
+                '        <td class="half_circle_right"></td>' +
+                '    </tr>';
+        }
+        board.innerHTML += board_string;
+    }
+
+    function loadSampleGame() {
+        let url = './json/sample_state.json';
+        let request = new XMLHttpRequest();
+        request.open('GET', url);
+        request.responseType = 'text';
+
+        request.onload = function() {
+            let sample_state = request.response;
+            sample_state = JSON.parse(sample_state);
+
+            let num_pegs = sample_state.code_length;
+            let num_rounds = sample_state.game_rounds;
+            let mode = sample_state.mode;
+            document.getElementById('game_settings').classList.add('hide');
+
+            function buildMastermind() {
+                return new Promise(async (resolve) => {
+                    mastermind = new Mastermind(num_pegs, num_rounds);
+                    await mastermind.loadFromSample(sample_state);
+                    resolve()
+                });
+            }
+
+            async function waiting() {
+                await buildMastermind();
+                let board_string = '';
+
+                if (mode === 0) {
+                    board_string += '     <div class="super_secret_code obfuscated">';
+
+                    document.getElementById('secret_code_wrapper_text').innerHTML = 'Hover over for secret code:';
+                    document.getElementById('restart_button').classList.add('hide');
+                    document.getElementById('guess_button').classList.remove('hide');
+                } else {
+                    board_string += '     <div class="sorta_secret_code">';
+
+                    document.getElementById('secret_code_wrapper_text').innerHTML = 'Set secret code here:';
+                    document.getElementById('restart_button').classList.add('hide');
+                    document.getElementById('response_button').classList.remove('hide');
+                }
+
+                board_string +=
+                    '        <div class="half_circle_left" style="height:52px;"></div>' +
+                    '        <div class="code_section" style="margin: initial;">' +
+                    '            <table>' +
+                    '                <tr class="code_row" id="secret_code_row">';
+                for (let i = 1; i <= num_pegs; i++) {
+                    board_string +=
+                        '                <td class="outer_cell">' +
+                        '                    <div class="peg_holder">' +
+                        '                        <div class="peg" id="secret_peg_' + i + '">' +
+                        '                        </div>' +
+                        '                    </div>' +
+                        '                </td>'
+                }
+                board_string +=
+                    '                </tr>' +
+                    '            </table>' +
+                    '        </div>' +
+                    '        <div class="half_circle_right" style="height: 52px;"></div>' +
+                    '    </div';
+
+                document.getElementById('secret_code_wrapper').innerHTML = board_string;
+
+                let secret_code = mastermind.secret_code;
+                let secret_pegs = document.getElementById('secret_code_wrapper').getElementsByClassName('peg');
+                for (let j = 0; j < secret_pegs.length; j++) {
+                    secret_pegs[j].classList.add(getColorVal(secret_code[j]));
+                }
+                mastermindBoardInitialization(mode, sample_state);
+                if (mode === 1) {
+                    computerGuess();
+                }
+            }
+            waiting();
+        };
+        request.send();
+    }
+
+    function startGame(mode) {
+        let pegs = document.getElementById('num_pegs');
+        let num_pegs = parseInt(pegs.options[pegs.selectedIndex].value);
+        let rounds = document.getElementById('num_rounds');
+        let num_rounds = parseInt(rounds.options[rounds.selectedIndex].value);
+        document.getElementById('game_settings').classList.add('hide');
+        document.getElementById('restart_button').classList.add('hide');
+
+        if (mode === 0) {
+            if (!(mastermind instanceof Mastermind)){
+                mastermind = new Mastermind(num_pegs, num_rounds);
+            }
+            else {
+                mastermind.setPegs(num_pegs);
+                mastermind.setRounds(num_rounds);
+                mastermind.generateCode();
+            }
+
+            mastermindBoardInitialization(0);
+
+            let board_string = '';
+            board_string +=
+                '     <div class="super_secret_code obfuscated">' +
+                '        <div class="half_circle_left" style="height: 52px;"></div>' +
+                '        <div class="code_section" style="margin: initial;">' +
+                '            <table>' +
+                '                <tr class="code_row">';
+            for (let i = 1; i <= num_pegs; i++) {
+                board_string +=
+                '                    <td class="outer_cell">' +
+                '                        <div class="peg_holder">' +
+                '                            <div class="peg" id="secret_peg_' + i + '">' +
+                '                            </div>' +
+                '                        </div>' +
+                '                    </td>'
+            }
+            board_string +=
+                '                </tr>' +
+                '            </table>' +
+                '        </div>' +
+                '        <div class="half_circle_right" style="height: 52px;"></div>' +
+                '    </div';
+
+            document.getElementById('secret_code_wrapper').innerHTML = board_string;
+            document.getElementById('secret_code_wrapper_text').innerHTML = 'Hover over for secret code:';
+
+            let secret_code = mastermind.secret_code;
+            let secret_pegs = document.getElementById('secret_code_wrapper').getElementsByClassName('peg');
+            for (let j = 0; j < secret_pegs.length; j++) {
+                secret_pegs[j].classList.add(getColorVal(secret_code[j]));
+            }
+            document.getElementById('guess_button').classList.remove('hide');
+        }
+        else {
+            if (!(mastermind instanceof Mastermind)){
+                mastermind = new Mastermind(num_pegs, num_rounds);
+            }
+            else {
+                mastermind.setPegs(num_pegs);
+                mastermind.setRounds(num_rounds);
+            }
+
+            let board_string = '';
+            board_string +=
+                '     <div class="sorta_secret_code">' +
+                '        <div class="half_circle_left" style="height:52px;"></div>' +
+                '        <div class="code_section" style="margin: initial;">' +
+                '            <table>' +
+                '                <tr class="code_row" id="secret_code_row">';
+            for (let i = 1; i <= num_pegs; i++) {
+                board_string +=
+                '                    <td class="outer_cell">' +
+                '                        <div class="peg_holder">' +
+                '                            <div class="peg" id="peg_' + i + '">' +
+                '                                <div class="color_menu">' +
+                '                                    <div class="sub_color_menu">' +
+                '                                        <option class="menu_peg white" value="1"></option>' +
+                '                                        <option class="menu_peg red" value="2"></option>' +
+                '                                        <option class="menu_peg green" value="3"></option>' +
+                '                                        <option class="menu_peg blue" value="4"></option>' +
+                '                                        <option class="menu_peg yellow" value="5"></option>' +
+                '                                        <option class="menu_peg purple" value="6"></option>' +
+                '                                        <option class="menu_peg orange" value="7"></option>' +
+                '                                    </div>' +
+                '                                </div>'+
+                '                                <input hidden class="peg_value" value="0"/>' +
+                '                            </div>' +
+                '                        </div>' +
+                '                    </td>'
+            }
+            board_string +=
+                '                </tr>' +
+                '            </table>' +
+                '        </div>' +
+                '        <div class="half_circle_right" style="height: 52px;"></div>' +
+                '    </div';
+
+            board_string +=
+                '        <div><button id="submit_code" class="mastermind_button" onclick="setSecretCode()">Submit Code</button></div>';
+
+            document.getElementById('secret_code_wrapper').innerHTML = board_string;
+            document.getElementById('secret_code_wrapper_text').innerHTML = 'Set secret code here:';
+
+            mastermindBoardInitialization(1);
+        }
+    }
+
+    function setSecretCode() {
+        let values = document.getElementById('secret_code_row').getElementsByClassName("peg_value");
+        let code = [];
+        let proceed = true;
+        let bad_pegs = [];
+        for (let i = 0; i < values.length; i++) {
+            let val = parseInt(values[i].value);
+            if (val > 7 || val < 1) {
+                proceed = false;
+                bad_pegs.push(i+1);
+            }
+            code.push(val);
+        }
+
+        if (proceed) {
+            document.getElementById("submit_code").classList.add('hide');
+            mastermind.setCode(code);
+
+            let current_row = document.getElementById('secret_code_row');
+            let pegs = current_row.getElementsByClassName('peg');
+
+            for (let i = 0; i < pegs.length; i++) {
+                pegs[i].onclick = null;
+                pegs[i].classList.remove('current_row_peg');
+            }
+
+            mastermind.startComputerTurn();
+            computerGuess();
+            document.getElementById('response_button').classList.remove('hide');
+        }
+        else {
+            let pegs = document.getElementById("secret_code_row").getElementsByClassName('peg');
+            for (let peg of pegs) {
+                if (bad_pegs.indexOf(parseInt(peg.id.split('_')[1])) >= 0) {
+                    peg.classList.add('error');
+                }
+            }
+        }
+    }
+
+    function makeGuess() {
+        let round = mastermind.getCurrentRound() + 1;
+        let values = document.getElementById("game_row_" + round.toString()).getElementsByClassName("peg_value");
+        let guess = [];
+        let proceed = true;
+        let bad_pegs = [];
+        for (let i = 0; i < values.length; i++) {
+            let val = parseInt(values[i].value);
+            if (val > 7 || val < 1) {
+                proceed = false;
+                bad_pegs.push(i+1);
+            }
+            guess.push(val);
+        }
+
+        if (proceed) {
+            getResponse(mastermind, guess);
+
+            let current_row = document.getElementById('game_row_' + round.toString());
+            let pegs = current_row.getElementsByClassName('peg');
+
+            for (let i = 0; i < pegs.length; i++) {
+                pegs[i].onclick = null;
+                pegs[i].classList.remove('current_row_peg', 'error');
+            }
+        }
+        else {
+            let pegs = document.getElementById("game_row_" + round.toString()).getElementsByClassName('peg');
+            for (let peg of pegs) {
+                if (bad_pegs.indexOf(parseInt(peg.id.split('_')[1])) >= 0) {
+                    peg.classList.add('error');
+                }
+            }
+        }
+    }
+
+    function getResponse(mastermind, guess) {
+        if (mastermind.guess(guess)) {
+            let round = mastermind.getCurrentRound();
+            for (let i = 1; i <= mastermind.getCodeLength(); i++) {
+                document.getElementById('game_row_' + round.toString())
+                    .querySelector('#inner_cell_' + i.toString()).innerHTML += '<div class="small_peg red"></div>';
+            }
+            document.getElementById('restart_button').classList.remove('hide');
+            document.getElementById('guess_button').classList.add('hide');
+            document.getElementsByClassName('obfuscated')[0].classList.remove('obfuscated');
+            showWinner();
+        }
+        else {
+            let response = mastermind.response(guess);
+            let round = mastermind.getCurrentRound();
+            for (let i = 1; i <= response.length; i++) {
+                document.getElementById('game_row_' + round.toString())
+                    .querySelector('#inner_cell_' + i.toString()).innerHTML += '<div class="small_peg ' + getValColor(response[i-1]) + '"></div>';
+            }
+            if (round === mastermind.getRoundTotal()) {
+                showLoser();
+            }
+            else {
+                let current_row = document.getElementById('game_row_' + (round + 1).toString());
+                let pegs = current_row.getElementsByClassName('peg');
+
+                for (let i = 0; i < pegs.length; i++) {
+                    pegs[i].onclick = function(el) {
+                        hideColorMenus();
+                        el.currentTarget.childNodes[1].classList.add("show");
+                    };
+
+                    pegs[i].classList.add('current_row_peg');
+                }
+            }
+        }
+        mastermind.incrementScore(0);
+        let computer_score = mastermind.getComputerScore();
+        document.getElementById('inner_cell_1_' + computer_score.toString()).innerHTML = '<div class="small_peg blue"></div>';
+    }
+
+    function submitResponse() {
+        document.getElementById('response_button').onclick = null;
+        let round = mastermind.getCurrentRound() + 1;
+        let values = document.getElementById("game_row_" + round.toString()).getElementsByClassName("peg_value");
+        let response = [];
+        let correct = 0;
+        for (let i = 0; i < values.length; i++) {
+            if (values[i].value !== '0') {
+                if (values[i].value === '2') {
+                    correct++
+                }
+                response.push(parseInt(values[i].value));
+            }
+        }
+        let proceed = true;
+
+        for (let g of response) {
+            if (g !== 1 && g !== 2) {
+                proceed = false;
+            }
+        }
+
+
+        if (correct === mastermind.getCodeLength()) {
+            document.getElementById('restart_button').classList.remove('hide');
+            document.getElementById('response_button').classList.add('hide');
+            showWinner();
+        }
+        else {
+            if (round === mastermind.getRoundTotal()) {
+                showLoser();
+                document.getElementById('restart_button').classList.remove('hide');
+                document.getElementById('response_button').classList.add('hide');
+            }
+            else {
+                mastermind.takeAnswer(response);
+                computerGuess();
+            }
+        }
+
+        let current_row = document.getElementById('game_row_' + round.toString());
+        let response_pegs = current_row.getElementsByClassName('response_cell')[0].getElementsByClassName('small_peg');
+
+        for (let i = 0; i < response_pegs.length; i++) {
+            response_pegs[i].onclick = null;
+            response_pegs[i].classList.remove('current_row_peg');
+        }
+
+        mastermind.incrementScore(1);
+        let player_score = mastermind.getPlayerScore();
+        document.getElementById('inner_cell_2_' + player_score.toString()).innerHTML = '<div class="small_peg green"></div>';
+    }
+
+    function computerGuess() {
+        let comp_guess = mastermind.makeGuess();
+        if (comp_guess) {
+            let round = mastermind.getCurrentRound() + 1;
+            let code_length = mastermind.getCodeLength();
+            let current_row = document.getElementById('game_row_' + round.toString());
+            let pegs = current_row.getElementsByClassName('peg');
+            for (let i = 0; i < code_length; i++) {
+                pegs[i].classList.add(getColorVal(comp_guess[i]));
+            }
+            let response_pegs = current_row.getElementsByClassName('response_cell')[0].getElementsByClassName('small_peg');
+
+            for (let i = 0; i < response_pegs.length; i++) {
+                response_pegs[i].onclick = function (el) {
+                    hideColorMenus();
+                    el.currentTarget.childNodes[1].classList.add("show");
+                };
+
+                response_pegs[i].classList.add('current_row_peg');
+            }
+            document.getElementById('response_button').onclick = submitResponse;
+        }
+        else {
+            showError();
+            document.getElementById('restart_button').classList.remove('hide');
+            document.getElementById('response_button').classList.add('hide');
+        }
+    }
+
+    function hooray() {
+        /*
+            About: This is a small sound of only 1 person shouting yay good for accomplishments or major goals for 1 person.
+            Title: 1 Person Cheering
+            Uploaded: 01.13.16
+            License: Attribution 3.0
+            Recorded by Jett Rifkin
+            File Size: 65 KB
+            Downloads: 196113
+            Source: http://soundbible.com/2103-1-Person-Cheering.html
+        */
+        document.getElementById('hooray_audio').play();
+    }
+
+    function close_end_game() {
+        let end_game = document.getElementById('end_game');
+        end_game.innerHTML = '';
+        end_game.classList.add('hide');
+        end_game.classList.remove('zoom_in');
+    }
+
+    function showWinner() {
+        let end_game = document.getElementById('end_game');
+        end_game.innerHTML =
+            '            <div class="end_game_exit" onclick="close_end_game();">&#xd7;</div>' +
+            '            <p class="end_game_large">We have a winner!</p>' +
+            '            <p class="end_game_medium">＼ ٩( ᐛ )و /／</p>' +
+            '            <p class="end_game_small">Press restart to play again</p>' +
+            '            <audio hidden id="hooray_audio">' +
+            '                <source src="audio/1_person_cheering-Jett_Rifkin-1851518140.mp3" type="audio/mpeg">' +
+            '            </audio>';
+
+        end_game.classList.remove('hide');
+        end_game.classList.add('zoom_in');
+        hooray();
+    }
+
+    function showLoser() {
+        let end_game = document.getElementById('end_game');
+        end_game.innerHTML =
+            '            <div class="end_game_exit" onclick="close_end_game();">&#xd7;</div>' +
+            '            <p class="end_game_large">Game Over</p>' +
+            '            <p class="end_game_medium">o(╥﹏╥)o</p>' +
+            '            <p class="end_game_small">Press restart to play again</p>';
+
+        end_game.classList.remove('hide');
+        end_game.classList.add('zoom_in');
+    }
+
+    function showError() {
+        let end_game = document.getElementById('end_game');
+        end_game.innerHTML =
+            '            <div class="end_game_exit" onclick="close_end_game();">&#xd7;</div>' +
+            '            <p class="end_game_large">Logic Error...</p>' +
+            '            <p class="end_game_medium">¯\\_(ツ)_/¯</p>' +
+            '            <p class="end_game_small">Responses make solution impossible</p>';
+
+        end_game.classList.remove('hide');
+        end_game.classList.add('zoom_in');
+    }
+
+    function restartGame() {
+        mastermind.restartGame();
+        document.getElementById('game_settings').classList.remove('hide');
+        document.getElementById('mastermind').innerHTML = '';
+        document.getElementById('secret_code_wrapper').innerHTML = '';
+        document.getElementById('secret_code_wrapper_text').innerHTML = '';
+        document.getElementById('centered_content').classList.add('hide');
+        close_end_game();
+    }
+
+    function getValColor(val) {
+        if (val === 1) {
+            return "white";
+        }
+        else {
+            return "red";
+        }
+    }
+
+    function getColorVal(color) {
+        switch (color) {
+            case 1:
+                return 'white';
+            case 2:
+                return 'red';
+            case 3:
+                return 'green';
+            case 4:
+                return 'blue';
+            case 5:
+                return 'yellow';
+            case 6:
+                return 'purple';
+            case 7:
+                return 'orange';
+            default:
+                break;
+        }
+    }
+
+    function setPegColorValue(value, color, menu_peg) {
+        let color_list = ['white', 'red', 'green', 'blue', 'yellow', 'purple', 'orange'];
+        let peg = menu_peg.parentNode.parentNode.parentNode;
+
+        for (let col of color_list) {
+            if (Object.values(peg.classList).indexOf(col) > -1) {
+                peg.classList.remove(col);
+                break;
+            }
+        }
+
+        peg.classList.add(color);
+        let peg_val = peg.childNodes[3];
+        peg_val.value = value;
+    }
+
+    function hideColorMenus () {
+        let color_menus = document.getElementsByClassName("show");
+        for (let i = 0; i < color_menus.length; i++) {
+            color_menus[i].classList.remove('show');
+        }
+    }
+
+    function checkClickLocation(event) {
+        if (event.target.matches('.menu_peg')) {
+            let value = event.target.value;
+            setPegColorValue(value, getColorVal(parseInt(value)), event.target);
+            hideColorMenus();
+        }
+        else {
+            if (!(event.target.matches('.peg') || event.target.matches('.color_menu') ||
+            event.target.matches('.sub_color_menu') || event.target.matches('.small_peg'))) {
+                hideColorMenus();
+            }
+        }
+    }
+
+    window.onclick = checkClickLocation;
+</script>
+</html>

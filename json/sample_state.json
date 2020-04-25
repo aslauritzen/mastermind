@@ -1,0 +1,11 @@
+{
+  "secret_code": [5,4,3,1],
+  "guesses": [[6, 2, 1, 7], [3, 6, 1, 5], [7, 2, 4, 6], [4, 5, 4, 1], [4, 2, 6, 1]],
+  "responses": [[1], [1, 1, 1], [1], [1, 1, 2], [2, 1]],
+  "code_length": 4,
+  "game_rounds": 10,
+  "current_round": 5,
+  "computer_score": 14,
+  "player_score": 8,
+  "mode": 0
+}

@@ -1,0 +1,393 @@
+.red {
+    background: radial-gradient(circle at 15% 15%, #ffdad4 3%, #d60015 70%, #ff0000 100%);
+    box-shadow: 1px 1px 3px gray;
+}
+.yellow {
+    background: radial-gradient(circle at 15% 15%, #fff8be 3%, #d5d400 70%, #feff00 100%);
+    box-shadow: 1px 1px 3px gray;
+}
+.green {
+    background: radial-gradient(circle at 15% 15%, #b3ffa5 3%, #008c00 70%, limegreen 100%);
+    box-shadow: 1px 1px 3px gray;
+}
+.blue {
+    background: radial-gradient(circle at 15% 15%, aqua 3%, blue 70%, dodgerblue 100%);
+    box-shadow: 1px 1px 3px gray;
+}
+.orange {
+    background: radial-gradient(circle at 15% 15%, #fbe5bc 3%, #e98700 70%, #ffb648 100%);
+    box-shadow: 1px 1px 3px gray;
+}
+.purple {
+    background: radial-gradient(circle at 15% 15%, #ffd1f9 3%, #970097 70%, #d800d8 100%);
+    box-shadow: 1px 1px 3px gray;
+}
+.white {
+    background: radial-gradient(circle at 15% 15%, white 3%, #c4c4c4 70%, #e2e2e2 100%);
+    box-shadow: 1px 1px 3px gray;
+}
+td {
+    display: inline-block
+}
+td.score_cell {
+    margin: 2px 10px;
+    height: 58px;
+}
+td.response_cell {
+    padding: 0 1px 0 10px;
+}
+td.outer_cell {
+    height: 50px;
+    display: table-cell;
+}
+tr.code_row {
+    border-top: solid 1px black;
+    border-bottom: solid 1px black;
+    background-color: #eee;
+}
+td.inner_cell {
+    border: solid 1px black;
+    height: 16px;
+    width: 16px;
+    background: white;
+    display: table-cell;
+}
+.peg {
+    height: 25px;
+    width: 25px;
+    background-color: #bbb;
+    border-radius: 50%;
+    margin:auto;
+    text-align: center;
+    font-size: 20px;
+    padding: 0;
+}
+.current_row_peg {
+    cursor: pointer;
+}
+.current_row_peg:hover {
+    background-color: #aaa;
+}
+.small_peg {
+    height: 12px;
+    width: 12px;
+    background-color: white;
+    border-radius: 50%;
+    margin:auto;
+}
+.peg_holder {
+    height: 25px;
+    padding: 5px;
+}
+table {
+    border-collapse: collapse;
+    display: inline-block;
+}
+table#mastermind {
+    padding: 30px;
+    border-radius: 30px;
+    background-color: black;
+    box-shadow: grey 5px 5px 10px;
+}
+table#mastermind_sidebar {
+    padding: 10px;
+    border-radius: 30px;
+    background-color: #bbb;
+    border: solid 1px black;
+    box-shadow: grey 5px 5px 10px;
+    visibility: hidden;
+}
+.half_circle_left {
+    width: 25px;
+    height: 50px;
+    border-bottom-left-radius: 110px;
+    border-top-left-radius: 110px;
+    border: 1px solid black;
+    border-right: none;
+    background-color: #eee;
+    margin-right: -2px;
+}
+.half_circle_right {
+    width: 25px;
+    height: 50px;
+    border-bottom-right-radius: 110px;
+    border-top-right-radius: 110px;
+    border: 1px solid black;
+    border-left: none;
+    background-color: #eee;
+    margin-right: 10px;
+    margin-left: -2px;
+}
+.game_row {
+    border: solid 1px black;
+    background: #ccc;
+}
+.game_title {
+    transform: rotate(-90deg);
+    transform-origin: left top 0;
+    font-size: 48px;
+    font-weight: 600;
+    text-align: center;
+}
+.code_section {
+    height: 55px;
+    margin-top: 1px;
+}
+.response_cell table {
+    margin-bottom: -3px;
+}
+#centered_content {
+    margin-top: 20px;
+}
+#mastermind_sidebar tbody :first-child td {
+    padding: 10px 10px 5px 10px;
+    background: white;
+    border-radius: 20px 20px 0 0 !important;
+    border-top: solid 1px black;
+    border-left: solid 1px black;
+    border-right: solid 1px black;
+}
+#mastermind_sidebar tbody :last-child td {
+    padding: 5px 10px 10px 10px;
+    background: white;
+    border-radius: 0 0 20px 20px  !important;
+    border-bottom: solid 1px black;
+    border-left: solid 1px black;
+    border-right: solid 1px black;
+}
+#mastermind_sidebar td {
+    padding: 5px 10px;
+    background: white;
+    border-left: solid 1px black;
+    border-right: solid 1px black;
+}
+.game_state {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    max-height: 500px;
+    overflow-y: auto;
+    display: block;
+    border: 1px solid black;
+    padding: 20px;
+    box-shadow: grey 2px 2px 10px;
+}
+#guess_wrapper{
+    display: block;
+    font-size: 20px;
+    text-align: center;
+}
+#guess_button.disabled {
+    cursor: not-allowed;
+}
+#guess_button:not(.disabled):hover{
+    background-color: #ddd;
+    color: #444444;
+    box-shadow: none;
+    padding-bottom: 5px;
+}
+.menu_peg {
+    height: 25px;
+    width: 25px;
+    background-color: #bbb;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 20px;
+    display: inline-block;
+    cursor: pointer;
+    padding: 0;
+}
+.dropbtn {
+    background-color: #3498DB;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+.color_menu {
+    display: none;
+    position: absolute;
+    /*min-width: 160px;*/
+    z-index: 999;
+    padding: 10px;
+    border-radius: 30px;
+    background-color: #bbb;
+    border: solid 1px black;
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    cursor: default;
+}
+.sub_color_menu {
+    background-color: white;
+    padding: 10px 10px 5px 10px;
+    border-radius: 30px;
+    border: solid 1px black;
+    cursor: default;
+}
+.show {
+    display:block;
+}
+.hide {
+    display: none;
+}
+#secret_code_wrapper {
+    float: left;
+}
+#secret_code_wrapper button {
+    float: right;
+    margin-top: 20px
+}
+.super_secret_code > *, .sorta_secret_code > * {
+    float: left;
+}
+.super_secret_code.obfuscated {
+    filter: invert(50%) sepia(100%) blur(2px);
+    transition: .3s;
+}
+.super_secret_code:hover {
+    filter: initial;
+    transition: .3s;
+}
+#game_settings {
+    width:500px;
+    border-radius: 5px;
+    border: black 1px solid;
+    box-shadow: #aaa 1px 2px 5px;
+    padding: 10px;
+    margin-left: calc(50% - 250px);
+    margin-top: calc(50vh - 89px);
+}
+#game_settings > * {
+    display: block;
+    margin: 10px 0;
+}
+@-webkit-keyframes pop_in {
+    0% {
+        transform: scale(0);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+.zoom_in {
+    animation: pop_in .5s linear;
+}
+#login_response {
+    text-align: center;
+}
+.clearstoragebutton {
+    height: 40px;
+    font-size: large;
+    cursor: pointer;
+    box-shadow: #aaa 1px 2px 2px;
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+}
+.loadsamplegame {
+    height: 40px;
+    font-size: large;
+    cursor: pointer;
+    box-shadow: #aaa 1px 2px 2px;
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+}
+#json_box {
+    position: fixed;
+    right: 10px;
+    top: 100px;
+    height: 500px;
+    border: solid 1px #888;
+    box-shadow: 2px 2px 5px #aaa;
+    width: 300px;
+}
+.start_buttons {
+    display: flex !important;
+    justify-content: space-evenly;
+}
+#guess_button:not(.disabled):hover{
+    background-color: #ddd;
+    color: #444444;
+    box-shadow: none;
+    padding-bottom: 5px;
+}
+.mastermind_button {
+    color: #333;
+    background-color: #fff;
+    border-color: #ccc;
+    transition: .2s;
+    padding: 4px;
+    font-size: 12px;
+}
+.mastermind_button:focus {
+    color: #333;
+    background-color: #e6e6e6;
+    border-color: #8c8c8c;
+}
+.mastermind_button:hover {
+    color: #333;
+    background-color: #e6e6e6;
+    border-color: #adadad;
+    transition: .2s;
+}
+.submit_restart {
+    height: 40px;
+    font-size: large;
+    cursor: pointer;
+    box-shadow: #aaa 1px 2px 2px;
+}
+.remove {
+    color: #777;
+}
+.bottom_margin {
+    margin-bottom: 5px;
+}
+.response_button {
+    min-width: 142px;
+}
+#end_game {
+    text-align: center;
+    height: 60vh;
+    width: 60vw;
+    position: fixed;
+    background: rgba(230, 230, 230, 0.90);
+    border: #999 solid 1px;
+    z-index: 1;
+    box-shadow: 2px 2px 5px #777;
+    border-radius: 10px;
+    top: calc(50% - 30vh);
+    left: calc(50% - 30vw);
+}
+#end_game > * {
+    background: rgba(230, 230, 230, 0.7);
+    margin: auto;
+    box-shadow: 0 0 50px 20px rgba(230, 230, 230, 0.7);
+    font-weight: 700;
+}
+.end_game_large {
+    font-size: 80px;
+    margin-top: calc(30vh - 143px) !important;
+}
+.end_game_medium {
+    font-size: 70px;
+}
+.end_game_small {
+    font-size: 60px;
+    padding-top: 20px;
+}
+.end_game_exit {
+    cursor: pointer;
+    font-size: 30px;
+    position: absolute;
+    width: 30px !important;
+    right: 6px;
+    color: #777;
+    height: 20px !important;
+}
+.winner_exit:hover {
+    color: #999;
+}
+.error {
+    box-shadow: 1px 1px 2px #9d0000, 0 0 10px #bf0000, 0 0 10px #ff0000;
+}
